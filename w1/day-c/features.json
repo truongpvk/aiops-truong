@@ -1,0 +1,50 @@
+[
+  {
+    "ts": 1705314000,
+    "metric": "cpu_usage",
+    "host": "srv-1",
+    "value": 45.2,
+    "feature_rolling_mean_3": 45.2,
+    "feature_rate_of_change_pct": 0.0
+  },
+  {
+    "ts": 1705314015,
+    "metric": "cpu_usage",
+    "host": "srv-1",
+    "value": 46.5,
+    "feature_rolling_mean_3": 45.85,
+    "feature_rate_of_change_pct": 2.88
+  },
+  {
+    "ts": 1705314030,
+    "metric": "cpu_usage",
+    "host": "srv-1",
+    "value": 50.1,
+    "feature_rolling_mean_3": 47.27,
+    "feature_rate_of_change_pct": 7.74
+  },
+  {
+    "ts": 1705314045,
+    "metric": "cpu_usage",
+    "host": "srv-1",
+    "value": 85.0,
+    "feature_rolling_mean_3": 60.53,
+    "feature_rate_of_change_pct": 69.66
+  },
+  {
+    "ts": 1705314060,
+    "metric": "cpu_usage",
+    "host": "srv-1",
+    "value": 88.2,
+    "feature_rolling_mean_3": 74.43,
+    "feature_rate_of_change_pct": 3.76
+  },
+  {
+    "ts": 1705314075,
+    "metric": "cpu_usage",
+    "host": "srv-1",
+    "value": 47.0,
+    "feature_rolling_mean_3": 73.4,
+    "feature_rate_of_change_pct": -46.71
+  }
+]
