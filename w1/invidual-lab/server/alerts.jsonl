@@ -1,0 +1,4 @@
+{"timestamp": "2026-06-05T10:14:09.619+00:00", "type": "dependency_timeout", "severity": "warning", "message": "Upstream dependency timeout cascade detected, timeout_rate=14.2%, 5xx_rate=7.4%, latency_z=58.0, streak=4"}
+{"timestamp": "2026-06-05T10:14:12.235+00:00", "type": "traffic_spike", "severity": "critical", "message": "Traffic spike detected, RPS=135 (1.2x baseline), queue_depth=52, latency_z=9.5"}
+{"timestamp": "2026-06-05T10:18:02.119+00:00", "type": "traffic_spike", "severity": "critical", "message": "[HARD THRESHOLD] traffic_spike detected: timeout=80.0%, 5xx=35.2%, latency=2797ms"}
+{"timestamp": "2026-06-05T10:18:02.119+00:00", "type": "dependency_timeout", "severity": "critical", "message": "[HARD THRESHOLD] dependency_timeout detected: timeout=80.0%, 5xx=35.2%, latency=2797ms"}
