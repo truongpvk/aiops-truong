@@ -1,0 +1,148 @@
+{
+  "clusters_analyzed": 5,
+  "results": [
+    {
+      "cluster_id": "c-000-000",
+      "graph_top3": [
+        [
+          "edge-lb",
+          1.0
+        ],
+        [
+          "checkout-svc",
+          0.93
+        ],
+        [
+          "cart-svc",
+          0.55
+        ]
+      ],
+      "root_cause": "edge-lb",
+      "class": "connection_pool_exhaustion",
+      "confidence": 0.28,
+      "actions": [
+        "Rollback to v3",
+        "1",
+        "Scale pool 50 → 100 cushion",
+        "Add pool monitor alert > 80%"
+      ],
+      "reasoning": "Dịch vụ 'edge-lb' được xác định là nguyên nhân gốc thông qua phân tích Topology và chuỗi thời gian cảnh báo. Khớp thành công với sự cố lịch sử INC-2025-11-08 đạt độ tương đồng Heuristic là 1.0.",
+      "similar_incidents": [
+        "INC-2025-11-08",
+        "INC-2026-03-20",
+        "INC-2025-09-05"
+      ],
+      "method": "graph+retrieval"
+    },
+    {
+      "cluster_id": "c-001-000",
+      "graph_top3": [
+        [
+          "recommender-svc",
+          1.0
+        ]
+      ],
+      "root_cause": "recommender-svc",
+      "class": "memory_leak",
+      "confidence": 1.0,
+      "actions": [
+        "Patch leak; rollback v3",
+        "0 trong khi chờ",
+        "Add gc",
+        "collect() trong handler"
+      ],
+      "reasoning": "Dịch vụ 'recommender-svc' được xác định là nguyên nhân gốc thông qua phân tích Topology và chuỗi thời gian cảnh báo. Khớp thành công với sự cố lịch sử INC-2025-08-02 đạt độ tương đồng Heuristic là 0.6.",
+      "similar_incidents": [
+        "INC-2025-08-02",
+        "INC-2025-10-28",
+        "INC-2026-03-07"
+      ],
+      "method": "graph+retrieval"
+    },
+    {
+      "cluster_id": "c-002-000",
+      "graph_top3": [
+        [
+          "edge-lb",
+          1.0
+        ],
+        [
+          "payment-svc",
+          1.0
+        ]
+      ],
+      "root_cause": "edge-lb",
+      "class": "ddos",
+      "confidence": 0.5,
+      "actions": [
+        "WAF rate-limit + Cloudflare proxy",
+        "Geographic rule"
+      ],
+      "reasoning": "Dịch vụ 'edge-lb' được xác định là nguyên nhân gốc thông qua phân tích Topology và chuỗi thời gian cảnh báo. Khớp thành công với sự cố lịch sử INC-2026-03-20 đạt độ tương đồng Heuristic là 1.0.",
+      "similar_incidents": [
+        "INC-2026-03-20",
+        "INC-2025-09-05",
+        "INC-2025-11-08"
+      ],
+      "method": "graph+retrieval"
+    },
+    {
+      "cluster_id": "c-003-000",
+      "graph_top3": [
+        [
+          "checkout-svc",
+          1.0
+        ],
+        [
+          "search-svc",
+          1.0
+        ]
+      ],
+      "root_cause": "checkout-svc",
+      "class": "n_plus_1",
+      "confidence": 0.5,
+      "actions": [
+        "Batch fetch related products",
+        "Add monitoring query count / request"
+      ],
+      "reasoning": "Dịch vụ 'checkout-svc' được xác định là nguyên nhân gốc thông qua phân tích Topology và chuỗi thời gian cảnh báo. Khớp thành công với sự cố lịch sử INC-2026-01-29 đạt độ tương đồng Heuristic là 0.6.",
+      "similar_incidents": [
+        "INC-2026-01-29",
+        "INC-2026-04-02",
+        "INC-2026-05-25"
+      ],
+      "method": "graph+retrieval"
+    },
+    {
+      "cluster_id": "c-004-000",
+      "graph_top3": [
+        [
+          "edge-lb",
+          1.0
+        ],
+        [
+          "notification-svc",
+          1.0
+        ],
+        [
+          "payment-svc",
+          1.0
+        ]
+      ],
+      "root_cause": "edge-lb",
+      "class": "ddos",
+      "confidence": 0.33,
+      "actions": [
+        "WAF rate-limit + Cloudflare proxy",
+        "Geographic rule"
+      ],
+      "reasoning": "Dịch vụ 'edge-lb' được xác định là nguyên nhân gốc thông qua phân tích Topology và chuỗi thời gian cảnh báo. Khớp thành công với sự cố lịch sử INC-2026-03-20 đạt độ tương đồng Heuristic là 1.0.",
+      "similar_incidents": [
+        "INC-2026-03-20",
+        "INC-2025-09-05",
+        "INC-2025-11-08"
+      ],
+      "method": "graph+retrieval"
+    }
+  ]
+}
