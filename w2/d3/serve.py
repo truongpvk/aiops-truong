@@ -105,10 +105,6 @@ def load_production_datasets():
 
 load_production_datasets()
 
-# =====================================================================
-# 4. KẾT NỐI TOÀN VẸN THUẬT TOÁN TỪ FILE NOTEBOOKS (LAYER 1 & 2)
-# =====================================================================
-
 def get_fingerprint(alert: dict) -> str:
     """Tạo định danh duy nhất cho loại alert dựa trên luật ở Section 2.1."""
     return f"{alert['service']}|{alert['metric']}|{alert['severity']}"
@@ -301,9 +297,6 @@ def run_rca(cluster: dict, alerts_list: list[dict], graph: nx.DiGraph, history_d
         "similar_incidents": similar_incident_ids
     }
 
-# =====================================================================
-# 5. KHỞI TẠO METRICS PROMETHEUS
-# =====================================================================
 AIOPS_REQUESTS = Counter("aiops_incident_requests_total", "Tổng số lượng request gửi tới pipeline", ["status"])
 AIOPS_LATENCY = Histogram("aiops_incident_latency_seconds", "Phân phối thời gian xử lý hệ thống xử lý sự cố")
 
