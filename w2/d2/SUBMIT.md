@@ -4,7 +4,8 @@ Trong cụm lớn nhất `c-000-000` (12 alerts), ứng viên top-1 `edge-lb` c�
 ---
 
 ### Câu 2: Variant bạn chọn cho classifier (A rule-based / B free LLM / C paid LLM). Chạy thực tế ra sao? Trade-off với variant bạn không chọn?
-Tôi chọn **Variant A (Rule-based/Heuristic retrieval)**. Chạy thực tế hệ thống hoạt động ổn định, đối sánh chính xác cụm lỗi lớn với sự cố lịch sử `INC-2025-11-08` (tương đồng 1.0), chỉ ra đúng lớp lỗi `connection_pool_exhaustion` và hành động mở rộng pool. **Đánh đổi:** Variant A mang lại phản hồi tức thì bằng mili-giây, chi phí bằng không và không bị hiện tượng ảo tưởng (hallucination) như LLM (Variant B/C). Tuy nhiên, nhược điểm là tính linh hoạt thấp, sẽ phải fallback gán nhãn `other` khi gặp dạng sự cố mới chưa từng có trong lịch sử.
+Tôi chọn **Variant A (Rule-based/Heuristic retrieval)**. Chạy thực tế hệ thống hoạt động ổn định, đối sánh chính xác cụm lỗi lớn với sự cố lịch sử `INC-2025-11-08` (tương đồng 1.0), chỉ ra đúng lớp lỗi `connection_pool_exhaustion` và hành động mở rộng pool. 
+**Đánh đổi:** Variant A mang lại phản hồi tức thì bằng mili-giây, chi phí bằng không và không bị hiện tượng ảo tưởng (hallucination) như LLM (Variant B/C). Tuy nhiên, nhược điểm là tính linh hoạt thấp, sẽ phải fallback gán nhãn `other` khi gặp dạng sự cố mới chưa từng có trong lịch sử.
 
 ---
 
