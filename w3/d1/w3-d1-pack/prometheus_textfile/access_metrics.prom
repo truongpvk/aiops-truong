@@ -1,0 +1,4 @@
+# HELP http_requests_total Total requests
+# TYPE http_requests_total counter
+http_requests_total{service="api",status="all"} 2073780
+http_requests_total{service="api",status="fail"} 7234
