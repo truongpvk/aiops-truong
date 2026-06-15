@@ -1,0 +1,49 @@
+version: 1
+services:
+  - name: frontend
+    sli:
+      name: frontend_availability
+      kind: availability
+      formula: "count(frontend_rum_events with no js_error and no network_error) / count(all frontend_rum_events)"
+      promql_good: "sum(rate(frontend_rum_events_total{js_error='false', network_error='false'}[$__rate_interval]))"
+      promql_total: "sum(rate(frontend_rum_events_total[$__rate_interval]))"
+      source: "data/frontend_rum.jsonl"
+    slo:
+      target: 0.9850
+      window_days: 30
+    budget:
+      total_events_per_month: 5184000
+      allowed_failures_per_month: 77760
+      downtime_minutes_equivalent: 648
+
+  - name: api
+    sli:
+      name: api_availability
+      kind: availability
+      formula: "count(http_responses with status 2xx, 3xx, 4xx_not_429) / count(all http_responses)"
+      promql_good: "sum(rate(http_requests_total{status!~'5..|429'}[$__rate_interval]))"
+      promql_total: "sum(rate(http_requests_total[$__rate_interval]))"
+      source: "data/access_log.jsonl"
+    slo:
+      target: 0.9950
+      window_days: 30
+    budget:
+      total_events_per_month: 20737800
+      allowed_failures_per_month: 103689
+      downtime_minutes_equivalent: 216
+
+  - name: db
+    sli:
+      name: db_query_success_rate
+      kind: availability
+      formula: "count(db_queries with success true) / count(all db_queries)"
+      promql_good: "sum(rate(db_query_total{success='true'}[$__rate_interval]))"
+      promql_total: "sum(rate(db_query_total[$__rate_interval]))"
+      source: "data/db_query_log.jsonl"
+    slo:
+      target: 0.9990
+      window_days: 30
+    budget:
+      total_events_per_month: 1726380
+      allowed_failures_per_month: 1726
+      downtime_minutes_equivalent: 43

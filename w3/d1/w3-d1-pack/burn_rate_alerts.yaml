@@ -1,0 +1,153 @@
+groups:
+  # ==========================================
+  # 1. API ALERTS (Bắt buộc tách nhóm để validate.py quét trúng)
+  # ==========================================
+  - name: api-slo  # <-- Tên nhóm này giúp script parse chính xác r["service"] == "api"
+    rules:
+      - alert: API_Availability_BurnRate_Tier1
+        expr: |
+          (
+            sum(rate(http_requests_total{status=~"5..|429"}[5m]))
+            / sum(rate(http_requests_total[5m]))
+          ) / (1 - 0.995) >= 14.4
+          AND
+          (
+            sum(rate(http_requests_total{status=~"5..|429"}[1m]))
+            / sum(rate(http_requests_total[1m]))
+          ) / (1 - 0.995) >= 14.4
+        labels: { severity: page, tier: "1", service: "api" }
+        annotations:
+          summary: "API burn rate >= 14.4 over both 5m and 1m windows (Urgent Page)"
+          runbook: "https://runbooks.example.com/slo-burn-api"
+
+      - alert: API_Availability_BurnRate_Tier2
+        expr: |
+          (
+            sum(rate(http_requests_total{status=~"5..|429"}[30m]))
+            / sum(rate(http_requests_total[30m]))
+          ) / (1 - 0.995) >= 6.0
+          AND
+          (
+            sum(rate(http_requests_total{status=~"5..|429"}[5m]))
+            / sum(rate(http_requests_total[5m]))
+          ) / (1 - 0.995) >= 6.0
+        labels: { severity: page, tier: "2", service: "api" }
+        annotations:
+          summary: "API burn rate >= 6.0 over both 30m and 5m windows (Page)"
+
+      - alert: API_Availability_BurnRate_Tier3
+        expr: |
+          (
+            sum(rate(http_requests_total{status=~"5..|429"}[3d]))
+            / sum(rate(http_requests_total[3d]))
+          ) / (1 - 0.995) >= 1
+          AND
+          (
+            sum(rate(http_requests_total{status=~"5..|429"}[6h]))
+            / sum(rate(http_requests_total[6h]))
+          ) / (1 - 0.995) >= 1
+        labels: { severity: ticket, tier: "3", service: "api" }
+        annotations:
+          summary: "API burn rate >= 1 over both 3d and 6h windows (Ticket)"
+
+  # ==========================================
+  # 2. FRONTEND ALERTS
+  # ==========================================
+  - name: frontend-slo # <-- Đặt tên nhóm chuẩn quản lý cho frontend
+    rules:
+      - alert: Frontend_Availability_BurnRate_Tier1
+        expr: |
+          (
+            (sum(rate(frontend_rum_events_total[1h])) - sum(rate(frontend_rum_events_total{js_error="false", network_error="false"}[1h])))
+            / sum(rate(frontend_rum_events_total[1h]))
+          ) / (1 - 0.985) >= 14.4
+          AND
+          (
+            (sum(rate(frontend_rum_events_total[5m])) - sum(rate(frontend_rum_events_total{js_error="false", network_error="false"}[5m])))
+            / sum(rate(frontend_rum_events_total[5m]))
+          ) / (1 - 0.985) >= 14.4
+        labels: { severity: page, tier: "1", service: "frontend" }
+        annotations:
+          summary: "Frontend burn rate >= 14.4 over both 1h and 5m windows (Urgent Page)"
+          runbook: "https://runbooks.example.com/slo-burn-frontend"
+
+      - alert: Frontend_Availability_BurnRate_Tier2
+        expr: |
+          (
+            (sum(rate(frontend_rum_events_total[6h])) - sum(rate(frontend_rum_events_total{js_error="false", network_error="false"}[6h])))
+            / sum(rate(frontend_rum_events_total[6h]))
+          ) / (1 - 0.985) >= 6
+          AND
+          (
+            (sum(rate(frontend_rum_events_total[30m])) - sum(rate(frontend_rum_events_total{js_error="false", network_error="false"}[30m])))
+            / sum(rate(frontend_rum_events_total[30m]))
+          ) / (1 - 0.985) >= 6
+        labels: { severity: page, tier: "2", service: "frontend" }
+        annotations:
+          summary: "Frontend burn rate >= 6 over both 6h and 30m windows (Page)"
+
+      - alert: Frontend_Availability_BurnRate_Tier3
+        expr: |
+          (
+            (sum(rate(frontend_rum_events_total[3d])) - sum(rate(frontend_rum_events_total{js_error="false", network_error="false"}[3d])))
+            / sum(rate(frontend_rum_events_total[3d]))
+          ) / (1 - 0.985) >= 1
+          AND
+          (
+            (sum(rate(frontend_rum_events_total[6h])) - sum(rate(frontend_rum_events_total{js_error="false", network_error="false"}[6h])))
+            / sum(rate(frontend_rum_events_total[6h]))
+          ) / (1 - 0.985) >= 1
+        labels: { severity: ticket, tier: "3", service: "frontend" }
+        annotations:
+          summary: "Frontend burn rate >= 1 over both 3d and 6h windows (Ticket)"
+
+  # ==========================================
+  # 3. DATABASE ALERTS
+  # ==========================================
+  - name: db-slo # <-- Đặt tên nhóm chuẩn quản lý cho database
+    rules:
+      - alert: DB_SuccessRate_BurnRate_Tier1
+        expr: |
+          (
+            (sum(rate(db_query_total[1h])) - sum(rate(db_query_total{success="true"}[1h])))
+            / sum(rate(db_query_total[1h]))
+          ) / (1 - 0.999) >= 14.4
+          AND
+          (
+            (sum(rate(db_query_total[5m])) - sum(rate(db_query_total{success="true"}[5m])))
+            / sum(rate(db_query_total[5m]))
+          ) / (1 - 0.999) >= 14.4
+        labels: { severity: page, tier: "1", service: "db" }
+        annotations:
+          summary: "Database burn rate >= 14.4 over both 1h and 5m windows (Urgent Page)"
+          runbook: "https://runbooks.example.com/slo-burn-db"
+
+      - alert: DB_SuccessRate_BurnRate_Tier2
+        expr: |
+          (
+            (sum(rate(db_query_total[6h])) - sum(rate(db_query_total{success="true"}[6h])))
+            / sum(rate(db_query_total[6h]))
+          ) / (1 - 0.999) >= 6
+          AND
+          (
+            (sum(rate(db_query_total[30m])) - sum(rate(db_query_total{success="true"}[30m])))
+            / sum(rate(db_query_total[30m]))
+          ) / (1 - 0.999) >= 6
+        labels: { severity: page, tier: "2", service: "db" }
+        annotations:
+          summary: "Database burn rate >= 6 over both 6h and 30m windows (Page)"
+
+      - alert: DB_SuccessRate_BurnRate_Tier3
+        expr: |
+          (
+            (sum(rate(db_query_total[3d])) - sum(rate(db_query_total{success="true"}[3d])))
+            / sum(rate(db_query_total[3d]))
+          ) / (1 - 0.999) >= 1
+          AND
+          (
+            (sum(rate(db_query_total[6h])) - sum(rate(db_query_total{success="true"}[6h])))
+            / sum(rate(db_query_total[6h]))
+          ) / (1 - 0.999) >= 1
+        labels: { severity: ticket, tier: "3", service: "db" }
+        annotations:
+          summary: "Database burn rate >= 1 over both 3d and 6h windows (Ticket)"
