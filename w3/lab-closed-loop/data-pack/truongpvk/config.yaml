@@ -1,0 +1,30 @@
+alertmanager_url: "http://localhost:9093"
+prometheus_url: "http://localhost:9090"
+
+baseline_path: "../data/baseline.json"
+
+blast_radius:
+  max_actions_per_minute: 3
+  max_restarts_per_service_per_hour: 5
+
+runbook_map:
+  HighLatency: "runbooks/restart_service.sh"
+  HighErrorRate: "runbooks/clear_cache.sh"
+  InstanceDown: "runbooks/restart_service.sh"
+
+runbook_registry:
+  - "runbooks/restart_service.sh"
+  - "runbooks/clear_cache.sh"
+  - "runbooks/scale_replicas.sh"
+
+# For stress testing multi-step deploys
+multi_step_map:
+  MultiStepDeploy: 
+    - "runbooks/step_a.sh"
+    - "runbooks/step_b.sh"
+    - "runbooks/step_c.sh"
+multi_step_rollback_map:
+  MultiStepDeploy: 
+    - "runbooks/rollback_a.sh"
+    - "runbooks/rollback_b.sh"
+    - "runbooks/rollback_c.sh"

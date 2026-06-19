@@ -18,3 +18,15 @@
 {"timestamp": "2026-06-06T04:44:00.750+00:00", "type": "traffic_spike", "severity": "warning", "message": "Traffic spike detected, RPS=375 (3.3x baseline), queue=81, rps_zscore=0.85"}
 {"timestamp": "2026-06-06T04:48:56.838+00:00", "type": "dependency_timeout", "severity": "critical", "message": "Upstream dependency timeout cascade, timeout_rate=75.8%, 5xx=36.1%, latency=2449ms, timeout_zscore=0.18"}
 {"timestamp": "2026-06-06T04:49:03.882+00:00", "type": "traffic_spike", "severity": "warning", "message": "Traffic spike detected, RPS=349 (3.1x baseline), queue=86, rps_zscore=0.42"}
+{"timestamp": "2026-06-06T04:54:00.078+00:00", "type": "dependency_timeout", "severity": "critical", "message": "Upstream dependency timeout cascade, timeout_rate=78.7%, 5xx=38.4%, latency=2660ms, timeout_zscore=1.18"}
+{"timestamp": "2026-06-06T04:54:07.132+00:00", "type": "traffic_spike", "severity": "warning", "message": "Traffic spike detected, RPS=307 (2.7x baseline), queue=76, rps_zscore=0.12"}
+{"timestamp": "2026-06-06T04:59:03.248+00:00", "type": "dependency_timeout", "severity": "critical", "message": "Upstream dependency timeout cascade, timeout_rate=74.9%, 5xx=38.8%, latency=2609ms, timeout_zscore=0.11"}
+{"timestamp": "2026-06-06T04:59:10.306+00:00", "type": "traffic_spike", "severity": "warning", "message": "Traffic spike detected, RPS=210 (1.9x baseline), queue=55, rps_zscore=1.90"}
+{"timestamp": "2026-06-06T05:04:06.405+00:00", "type": "dependency_timeout", "severity": "critical", "message": "Upstream dependency timeout cascade, timeout_rate=76.4%, 5xx=34.6%, latency=2828ms, timeout_zscore=0.24"}
+{"timestamp": "2026-06-06T05:04:13.613+00:00", "type": "traffic_spike", "severity": "warning", "message": "Traffic spike detected, RPS=180 (1.6x baseline), queue=79, rps_zscore=1.36"}
+{"timestamp": "2026-06-06T05:09:09.779+00:00", "type": "dependency_timeout", "severity": "critical", "message": "Upstream dependency timeout cascade, timeout_rate=65.9%, 5xx=33.7%, latency=2615ms, timeout_zscore=1.94"}
+{"timestamp": "2026-06-06T05:09:16.822+00:00", "type": "traffic_spike", "severity": "warning", "message": "Traffic spike detected, RPS=146 (1.3x baseline), queue=97, rps_zscore=1.72"}
+{"timestamp": "2026-06-06T05:14:13.013+00:00", "type": "dependency_timeout", "severity": "critical", "message": "Upstream dependency timeout cascade, timeout_rate=80.0%, 5xx=39.4%, latency=2459ms, timeout_zscore=1.16"}
+{"timestamp": "2026-06-06T05:14:20.079+00:00", "type": "traffic_spike", "severity": "warning", "message": "Traffic spike detected, RPS=231 (2.0x baseline), queue=71, rps_zscore=1.83"}
+{"timestamp": "2026-06-06T05:19:16.276+00:00", "type": "dependency_timeout", "severity": "critical", "message": "Upstream dependency timeout cascade, timeout_rate=80.0%, 5xx=39.5%, latency=2500ms, timeout_zscore=1.36"}
+{"timestamp": "2026-06-06T05:20:44.410+00:00", "type": "traffic_spike", "severity": "warning", "message": "Traffic spike detected, RPS=273 (2.4x baseline), queue=68, rps_zscore=3.01"}
