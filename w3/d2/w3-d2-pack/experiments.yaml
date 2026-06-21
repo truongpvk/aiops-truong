@@ -1,0 +1,262 @@
+# 10 chaos experiments — all entries filled per §8.3 + §8.4
+# Each entry has ALL 5 fields per §5: name, hypothesis, blast_radius, rollback, measurement, ground_truth
+
+experiments:
+
+  - id: 1
+    name: payment_latency
+    fault_type: latency
+    target: payment-svc
+    hypothesis: |
+      Steady-state: probe pass-rate >= 99%, p99 latency < 500ms.
+      Injecting 500ms ± 100ms delay on payment-svc network egress for 60s,
+      pipeline detector fires latency anomaly within 30s and RCA picks payment-svc.
+      probe pass-rate may drop to 70-80% during inject (acceptable).
+    blast_radius:
+      target: 1 instance of payment-svc
+      duration_seconds: 60
+      traffic_percent: 100
+    rollback:
+      automatic: true
+      trigger_when: probe_pass_rate < 50% for 20s
+      method: docker exec payment-svc tc qdisc del dev eth0 root
+    measurement:
+      metrics: [probe_pass_rate, p99_latency, detector_alerts, rca_root_service]
+      capture_window_seconds: 300
+    ground_truth:
+      expected_root_service: payment-svc
+      expected_fault_class: latency
+
+  - id: 2
+    name: payment_packet_loss
+    fault_type: network_loss
+    target: payment-svc
+    hypothesis: |
+      Steady-state: probe pass-rate >= 99%, error_rate < 1%.
+      Injecting 30% packet loss on payment-svc for 60s. Pipeline detector
+      fires error_rate anomaly within 30s. RCA identifies payment-svc as root
+      because downstream payment-db will show connection errors, but payment-svc
+      is the injection point. probe pass-rate may drop to 60-70%.
+    blast_radius:
+      target: 1 instance of payment-svc
+      duration_seconds: 60
+      traffic_percent: 100
+    rollback:
+      automatic: true
+      trigger_when: probe_pass_rate < 40% for 20s
+      method: docker exec payment-svc tc qdisc del dev eth0 root
+    measurement:
+      metrics: [probe_pass_rate, error_rate, p99_latency, rca_root_service]
+      capture_window_seconds: 300
+    ground_truth:
+      expected_root_service: payment-svc
+      expected_fault_class: network_loss
+
+  - id: 3
+    name: inventory_pod_kill
+    fault_type: availability
+    target: inventory-svc
+    hypothesis: |
+      Steady-state: probe pass-rate >= 99%, service_up = 1 for all services.
+      Killing inventory-svc container, Docker auto-restarts it. During downtime
+      (~10-20s), pipeline detects service_up=0 anomaly and fires availability alert.
+      RCA picks inventory-svc. api-gateway and checkout-svc will show downstream
+      errors but pipeline should trace root to inventory-svc (temporal: it went
+      down first).
+    blast_radius:
+      target: 1 instance of inventory-svc
+      duration_seconds: 120
+      traffic_percent: 100
+    rollback:
+      automatic: true
+      trigger_when: service down > 120s
+      method: docker start inventory-svc
+    measurement:
+      metrics: [probe_pass_rate, service_up, error_rate, rca_root_service]
+      capture_window_seconds: 300
+    ground_truth:
+      expected_root_service: inventory-svc
+      expected_fault_class: availability
+
+  - id: 4
+    name: gateway_cpu_saturation
+    fault_type: cpu_saturation
+    target: api-gateway
+    hypothesis: |
+      Steady-state: probe pass-rate >= 99%, p99 latency < 500ms.
+      Stressing api-gateway CPU to 90% for 60s. Since api-gateway is the
+      single entry point (tier 1), all downstream services will experience
+      increased latency. Pipeline should detect latency cascade across
+      multiple downstream services. RCA should identify api-gateway as root
+      because it's the gateway tier and shows CPU saturation metric.
+    blast_radius:
+      target: 1 instance of api-gateway
+      duration_seconds: 60
+      traffic_percent: 100
+    rollback:
+      automatic: true
+      trigger_when: probe_pass_rate < 30% for 20s
+      method: docker exec api-gateway pkill stress-ng
+    measurement:
+      metrics: [probe_pass_rate, cpu_usage, p99_latency, rca_root_service]
+      capture_window_seconds: 300
+    ground_truth:
+      expected_root_service: api-gateway
+      expected_fault_class: cpu_saturation
+
+  - id: 5
+    name: payment_db_memory_fill
+    fault_type: memory
+    target: payment-db
+    hypothesis: |
+      Steady-state: probe pass-rate >= 99%, memory usage < 50%.
+      Filling payment-db memory to 95% for 90s. This causes connection pool
+      exhaustion — payment-svc will get connection errors from payment-db.
+      Pipeline should detect memory anomaly on payment-db and connection
+      errors propagating to payment-svc. RCA should pick payment-db (root
+      is deepest in topology, tier 3).
+    blast_radius:
+      target: 1 instance of payment-db
+      duration_seconds: 90
+      traffic_percent: 100
+    rollback:
+      automatic: true
+      trigger_when: OOM kill or probe_pass_rate < 30%
+      method: docker exec payment-db pkill stress-ng
+    measurement:
+      metrics: [probe_pass_rate, memory_usage, error_rate, rca_root_service]
+      capture_window_seconds: 300
+    ground_truth:
+      expected_root_service: payment-db
+      expected_fault_class: memory
+
+  - id: 6
+    name: auth_clock_skew
+    fault_type: time_skew
+    target: auth-svc
+    hypothesis: |
+      Steady-state: probe pass-rate >= 99%, no authentication errors.
+      Skewing auth-svc clock by +60 seconds. This should cause JWT token
+      validation failures and certificate timestamp mismatches. Pipeline
+      should detect error_rate spike on auth-svc. RCA picks auth-svc.
+      This is a lateral fault — auth-svc doesn't sit in the main request
+      path but affects any service doing auth checks.
+    blast_radius:
+      target: 1 instance of auth-svc
+      duration_seconds: 60
+      traffic_percent: 100
+    rollback:
+      automatic: true
+      trigger_when: auth errors > 50% for 30s
+      method: docker exec auth-svc date -s "$(date -u +%Y-%m-%dT%H:%M:%S)"
+    measurement:
+      metrics: [probe_pass_rate, error_rate, auth_failures, rca_root_service]
+      capture_window_seconds: 300
+    ground_truth:
+      expected_root_service: auth-svc
+      expected_fault_class: time_skew
+
+  - id: 7
+    name: log_collector_disk_fill
+    fault_type: disk_fill
+    target: log-collector
+    hypothesis: |
+      Steady-state: probe pass-rate >= 99%, disk usage < 50%.
+      Filling log-collector disk to 95%. This is a meta-monitoring test:
+      can the pipeline detect its own observability infrastructure degradation?
+      Log ingestion should lag or stop. Pipeline may miss this if it only
+      monitors application-tier services. This tests the pipeline's ability
+      to do meta-monitoring (§7.5 failure mode). Expected: detect disk usage
+      anomaly, RCA picks log-collector.
+    blast_radius:
+      target: 1 instance of log-collector
+      duration_seconds: 90
+      traffic_percent: 0
+    rollback:
+      automatic: true
+      trigger_when: disk > 98%
+      method: docker exec log-collector rm -f /tmp/fill_*
+    measurement:
+      metrics: [probe_pass_rate, disk_usage, log_ingestion_lag, rca_root_service]
+      capture_window_seconds: 300
+    ground_truth:
+      expected_root_service: log-collector
+      expected_fault_class: disk_fill
+
+  - id: 8
+    name: frontend_gateway_partition
+    fault_type: network_partition
+    target: frontend
+    hypothesis: |
+      Steady-state: probe pass-rate >= 99%, all services connected.
+      Creating full network partition between frontend and api-gateway for
+      30s using iptables DROP. All user-facing requests will timeout.
+      Pipeline should detect all-downstream timeout cascade. Probe will
+      fail 100% during partition. RCA should pick the edge link
+      (frontend or api-gateway) as root — NOT downstream services.
+    blast_radius:
+      target: frontend ↔ api-gateway link
+      duration_seconds: 30
+      traffic_percent: 100
+    rollback:
+      automatic: true
+      trigger_when: partition > 30s
+      method: docker exec frontend iptables -F
+    measurement:
+      metrics: [probe_pass_rate, error_rate, timeout_count, rca_root_service]
+      capture_window_seconds: 300
+    ground_truth:
+      expected_root_service: frontend
+      expected_fault_class: network_partition
+
+  - id: 9
+    name: dns_slow_lookup
+    fault_type: dns_latency
+    target: dns-resolver
+    hypothesis: |
+      Steady-state: probe pass-rate >= 99%, DNS resolution < 10ms.
+      Injecting 2s delay on dns-resolver network for 60s. This simulates
+      slow DNS lookups affecting any service that resolves names. The
+      impact is intermittent because services cache DNS. Pipeline should
+      detect latency anomaly on dns-resolver. RCA depends on topology:
+      should pick dns-resolver if services show intermittent errors
+      correlated with DNS delays.
+    blast_radius:
+      target: 1 instance of dns-resolver
+      duration_seconds: 60
+      traffic_percent: 100
+    rollback:
+      automatic: true
+      trigger_when: probe_pass_rate < 50% for 30s
+      method: docker exec dns-resolver tc qdisc del dev eth0 root
+    measurement:
+      metrics: [probe_pass_rate, dns_latency, error_rate, rca_root_service]
+      capture_window_seconds: 300
+    ground_truth:
+      expected_root_service: dns-resolver
+      expected_fault_class: dns_latency
+
+  - id: 10
+    name: checkout_retry_storm
+    fault_type: http_error
+    target: checkout-svc
+    hypothesis: |
+      Steady-state: probe pass-rate >= 99%.
+      Injecting 20% HTTP 500 on checkout-svc responses for 90s, client retries
+      amplify load on upstream payment-svc + inventory-svc. Pipeline must NOT
+      pick checkout-svc as root (it's the symptom carrier, not cause). RCA
+      should pick payment-svc OR inventory-svc (whichever shows queue depth).
+    blast_radius:
+      target: 100% of checkout-svc requests
+      duration_seconds: 90
+      traffic_percent: 100
+    rollback:
+      automatic: true
+      trigger_when: probe_pass_rate < 30% for 30s
+      method: docker exec checkout-svc pkill -f error_inject
+    measurement:
+      metrics: [probe_pass_rate, retry_count, upstream_queue_depth, rca_root_service]
+      capture_window_seconds: 600
+    ground_truth:
+      expected_root_service: NOT checkout-svc  # negative test
+      expected_fault_class: cascade_retry

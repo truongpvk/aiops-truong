@@ -1,0 +1,191 @@
+version: "3.8"
+
+x-mock-service: &mock-defaults
+  build:
+    context: ./services
+    dockerfile: Dockerfile
+  restart: unless-stopped
+  networks:
+    - chaos-net
+  cap_add:
+    - NET_ADMIN     # for tc, iptables (chaos injection)
+    - SYS_TIME      # for clock skew injection
+  healthcheck:
+    test: ["CMD", "curl", "-sf", "http://localhost:8080/health"]
+    interval: 10s
+    timeout: 5s
+    retries: 3
+
+services:
+  # ── Application Services ─────────────────────────────────────
+  frontend:
+    <<: *mock-defaults
+    container_name: frontend
+    environment:
+      SERVICE_NAME: frontend
+      SERVICE_PORT: "8080"
+      DOWNSTREAM: "api-gateway:8080"
+      TOPOLOGY_ROLE: frontend
+    ports:
+      - "8080:8080"
+
+  api-gateway:
+    <<: *mock-defaults
+    container_name: api-gateway
+    environment:
+      SERVICE_NAME: api-gateway
+      SERVICE_PORT: "8080"
+      DOWNSTREAM: "payment-svc:8080,inventory-svc:8080,notification-svc:8080,checkout-svc:8080"
+      TOPOLOGY_ROLE: gateway
+
+  payment-svc:
+    <<: *mock-defaults
+    container_name: payment-svc
+    environment:
+      SERVICE_NAME: payment-svc
+      SERVICE_PORT: "8080"
+      DOWNSTREAM: "payment-db:8080"
+      TOPOLOGY_ROLE: app
+
+  inventory-svc:
+    <<: *mock-defaults
+    container_name: inventory-svc
+    environment:
+      SERVICE_NAME: inventory-svc
+      SERVICE_PORT: "8080"
+      DOWNSTREAM: "inventory-db:8080"
+      TOPOLOGY_ROLE: app
+
+  notification-svc:
+    <<: *mock-defaults
+    container_name: notification-svc
+    environment:
+      SERVICE_NAME: notification-svc
+      SERVICE_PORT: "8080"
+      DOWNSTREAM: ""
+      TOPOLOGY_ROLE: app
+
+  checkout-svc:
+    <<: *mock-defaults
+    container_name: checkout-svc
+    environment:
+      SERVICE_NAME: checkout-svc
+      SERVICE_PORT: "8080"
+      DOWNSTREAM: "payment-svc:8080,inventory-svc:8080"
+      TOPOLOGY_ROLE: app
+
+  auth-svc:
+    <<: *mock-defaults
+    container_name: auth-svc
+    environment:
+      SERVICE_NAME: auth-svc
+      SERVICE_PORT: "8080"
+      DOWNSTREAM: ""
+      TOPOLOGY_ROLE: app
+
+  # ── Infrastructure Services ──────────────────────────────────
+  payment-db:
+    <<: *mock-defaults
+    container_name: payment-db
+    environment:
+      SERVICE_NAME: payment-db
+      SERVICE_PORT: "8080"
+      DOWNSTREAM: ""
+      TOPOLOGY_ROLE: db
+
+  inventory-db:
+    <<: *mock-defaults
+    container_name: inventory-db
+    environment:
+      SERVICE_NAME: inventory-db
+      SERVICE_PORT: "8080"
+      DOWNSTREAM: ""
+      TOPOLOGY_ROLE: db
+
+  cache-svc:
+    <<: *mock-defaults
+    container_name: cache-svc
+    environment:
+      SERVICE_NAME: cache-svc
+      SERVICE_PORT: "8080"
+      DOWNSTREAM: ""
+      TOPOLOGY_ROLE: infra
+
+  log-collector:
+    <<: *mock-defaults
+    container_name: log-collector
+    environment:
+      SERVICE_NAME: log-collector
+      SERVICE_PORT: "8080"
+      DOWNSTREAM: ""
+      TOPOLOGY_ROLE: infra
+
+  dns-resolver:
+    <<: *mock-defaults
+    container_name: dns-resolver
+    environment:
+      SERVICE_NAME: dns-resolver
+      SERVICE_PORT: "8080"
+      DOWNSTREAM: ""
+      TOPOLOGY_ROLE: infra
+
+  # ── Monitoring Stack ─────────────────────────────────────────
+  prometheus:
+    image: prom/prometheus:v2.50.0
+    container_name: prometheus
+    volumes:
+      - ./configs/prometheus.yml:/etc/prometheus/prometheus.yml:ro
+    ports:
+      - "9090:9090"
+    networks:
+      - chaos-net
+    restart: unless-stopped
+
+  grafana:
+    image: grafana/grafana:10.4.0
+    container_name: grafana
+    environment:
+      GF_SECURITY_ADMIN_PASSWORD: admin
+      GF_AUTH_ANONYMOUS_ENABLED: "true"
+    ports:
+      - "3000:3000"
+    networks:
+      - chaos-net
+    restart: unless-stopped
+
+  alertmanager:
+    image: prom/alertmanager:v0.27.0
+    container_name: alertmanager
+    ports:
+      - "9093:9093"
+    networks:
+      - chaos-net
+    restart: unless-stopped
+
+  # ── AIOps Pipeline ──────────────────────────────────────────
+  aiops-pipeline:
+    build:
+      context: ./pipeline
+      dockerfile: Dockerfile
+    container_name: aiops-pipeline
+    environment:
+      PROMETHEUS_URL: "http://prometheus:9090"
+      BASELINE_PATH: "/data/baseline.json"
+    volumes:
+      - ./data:/data
+    ports:
+      - "8000:8000"
+    networks:
+      - chaos-net
+    restart: unless-stopped
+    depends_on:
+      - prometheus
+    healthcheck:
+      test: ["CMD", "curl", "-sf", "http://localhost:8000/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+networks:
+  chaos-net:
+    driver: bridge
