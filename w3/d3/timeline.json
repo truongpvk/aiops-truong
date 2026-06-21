@@ -1,0 +1,80 @@
+{
+  "incident": "cloudflare_waf_regex_2019_reproduction",
+  "capture_start": "2026-06-21T08:00:00Z",
+  "capture_duration_seconds": 600,
+  "total_events": 12,
+  "events": [
+    {
+      "timestamp": "2026-06-21T08:00:00Z",
+      "event": "baseline_healthy",
+      "detail": "Edge server responding normally, avg latency 5ms, CPU 3%",
+      "source": "healthcheck"
+    },
+    {
+      "timestamp": "2026-06-21T08:01:30Z",
+      "event": "waf_rule_deployed",
+      "detail": "evil_regex_deployed=true — WAF rule with nested quantifiers pushed globally",
+      "source": "container_event"
+    },
+    {
+      "timestamp": "2026-06-21T08:01:35Z",
+      "event": "first_adversarial_request",
+      "detail": "POST /waf-check with payload 'x=xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx' — regex matching started",
+      "source": "application_log"
+    },
+    {
+      "timestamp": "2026-06-21T08:01:37Z",
+      "event": "cpu_usage_spike",
+      "detail": "cpu_percent=98.5 — catastrophic backtracking consuming all CPU",
+      "source": "prometheus"
+    },
+    {
+      "timestamp": "2026-06-21T08:01:42Z",
+      "event": "high_error_rate",
+      "detail": "503_rate=0.85/s — edge server returning 503 Service Unavailable",
+      "source": "prometheus"
+    },
+    {
+      "timestamp": "2026-06-21T08:01:50Z",
+      "event": "edge_server_health_changed",
+      "detail": "healthy=false — healthcheck endpoint unresponsive (timeout 3s)",
+      "source": "healthcheck"
+    },
+    {
+      "timestamp": "2026-06-21T08:02:15Z",
+      "event": "latency_anomaly_detected",
+      "detail": "p99_latency=12.4s (baseline: 0.005s) — 2480x increase",
+      "source": "prometheus"
+    },
+    {
+      "timestamp": "2026-06-21T08:03:00Z",
+      "event": "traffic_drop_observed",
+      "detail": "successful_requests_rate dropped from 50/s to 3/s — 94% traffic loss",
+      "source": "prometheus"
+    },
+    {
+      "timestamp": "2026-06-21T08:05:00Z",
+      "event": "root_cause_identified",
+      "detail": "WAF regex with nested quantifiers causing exponential backtracking on adversarial input",
+      "source": "manual_investigation"
+    },
+    {
+      "timestamp": "2026-06-21T08:05:30Z",
+      "event": "mitigation_applied",
+      "detail": "evil_regex_deployed=false — WAF rule removed via /tmp/evil_regex_flag deletion",
+      "source": "container_event"
+    },
+    {
+      "timestamp": "2026-06-21T08:05:45Z",
+      "event": "cpu_usage_recovered",
+      "detail": "cpu_percent=4.2 — CPU returned to normal levels",
+      "source": "prometheus"
+    },
+    {
+      "timestamp": "2026-06-21T08:06:00Z",
+      "event": "edge_server_health_changed",
+      "detail": "healthy=true — full recovery confirmed, latency back to 5ms baseline",
+      "source": "healthcheck"
+    }
+  ]
+}

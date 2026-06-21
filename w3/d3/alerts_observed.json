@@ -1,0 +1,59 @@
+{
+  "source": "aiops_pipeline_v1",
+  "query": "GET /alerts?since=2026-06-21T08:01:30Z",
+  "total_alerts": 5,
+  "alerts": [
+    {
+      "alert_id": "ALT-001",
+      "timestamp": "2026-06-21T08:01:55Z",
+      "service": "edge-server",
+      "metric": "http_request_duration_seconds_p99",
+      "severity": "critical",
+      "value": 12.4,
+      "threshold": 0.5,
+      "message": "p99 latency 12.4s exceeds threshold 0.5s (2480% above normal)"
+    },
+    {
+      "alert_id": "ALT-002",
+      "timestamp": "2026-06-21T08:01:58Z",
+      "service": "edge-server",
+      "metric": "http_requests_total_503_rate",
+      "severity": "critical",
+      "value": 0.85,
+      "threshold": 0.05,
+      "message": "HTTP 503 error rate 0.85/s exceeds threshold 0.05/s"
+    },
+    {
+      "alert_id": "ALT-003",
+      "timestamp": "2026-06-21T08:02:05Z",
+      "service": "edge-server",
+      "metric": "edge_cpu_usage_percent",
+      "severity": "warning",
+      "value": 98.5,
+      "threshold": 80.0,
+      "message": "CPU usage 98.5% exceeds threshold 80%"
+    },
+    {
+      "alert_id": "ALT-004",
+      "timestamp": "2026-06-21T08:02:15Z",
+      "service": "edge-server",
+      "metric": "service_up",
+      "severity": "critical",
+      "value": 0,
+      "threshold": 1,
+      "message": "Edge server healthcheck failed — service_up=0"
+    },
+    {
+      "alert_id": "ALT-005",
+      "timestamp": "2026-06-21T08:03:00Z",
+      "service": "edge-server",
+      "metric": "http_requests_total_success_rate",
+      "severity": "critical",
+      "value": 0.06,
+      "threshold": 0.95,
+      "message": "Success rate dropped to 6% (baseline: 99.8%) — 94% traffic loss"
+    }
+  ],
+  "detection_latency_seconds": 25,
+  "notes": "All alerts fired on the same service (edge-server) because this outage has no cascading topology — all edge nodes fail simultaneously."
+}

@@ -1,0 +1,54 @@
+{
+  "source": "aiops_pipeline_v1",
+  "query": "POST /rca {window_start: 2026-06-21T08:01:30Z, window_end: 2026-06-21T08:11:30Z}",
+  "rca_result": {
+    "root_service": "edge-server",
+    "confidence": 0.91,
+    "method": "topology_aware_rca_v1",
+    "signals_used": {
+      "topology_distance": "N/A — single service, no upstream/downstream",
+      "first_drift_time": "2026-06-21T08:01:55Z (latency spike)",
+      "alert_volume": 5
+    },
+    "contributing_factors": [
+      "CPU saturation at 98.5% — consistent with compute-bound failure",
+      "All alerts originated from the same service — no cascading pattern"
+    ],
+    "root_cause_hypothesis": "Compute-intensive operation (likely CPU-bound processing) saturated all available CPU, causing request timeouts and 503 errors"
+  },
+  "gaps_identified": [
+    {
+      "gap_id": "GAP-1",
+      "description": "Pipeline cannot identify the SPECIFIC cause of CPU saturation",
+      "detail": "RCA correctly identified edge-server as the root service and CPU saturation as the symptom, but could not determine that a WAF regex rule with catastrophic backtracking was the cause. The pipeline lacks application-layer introspection (WAF rule analysis, regex complexity scoring). It sees 'CPU high' but cannot explain 'why CPU high'.",
+      "impact": "Operators must still manually investigate application code/config to find the actual root cause. MTTR for diagnosis not reduced.",
+      "category": "application_layer_visibility"
+    },
+    {
+      "gap_id": "GAP-2",
+      "description": "Pipeline missed the deployment event that triggered the outage",
+      "detail": "The WAF rule deployment at 08:01:30Z was the trigger event, but the pipeline has no integration with the deployment/config-push system. It only detected symptoms 25 seconds later. A deployment-aware detector could have correlated the timing of the config push with the onset of anomalies and flagged it as the likely trigger within seconds.",
+      "impact": "Detection latency 25s instead of potential <5s. No automatic correlation between 'deploy happened' and 'metrics degraded'.",
+      "category": "deployment_correlation"
+    },
+    {
+      "gap_id": "GAP-3",
+      "description": "Topology-aware RCA provides no advantage for simultaneous global failures",
+      "detail": "This outage pattern (global atomic push → all nodes fail simultaneously) breaks topology-aware RCA because there is no cascading sequence to analyze. All nodes went down at the same time, so temporal causality (Granger) and topology distance signals are both useless. The pipeline falls back to simple alert-count ranking.",
+      "impact": "RCA method degrades to count-based for this failure class. Need a separate detector for 'correlated simultaneous failure across all instances'.",
+      "category": "simultaneous_failure_detection"
+    }
+  ],
+  "comparison_with_original_postmortem": {
+    "detection_time_target": "<30s",
+    "detection_time_actual": "25s",
+    "detection_target_met": true,
+    "correct_root_service": true,
+    "correct_root_cause": false,
+    "patterns_missed": [
+      "Config/deploy change as trigger event",
+      "Regex complexity as root cause (application-layer)",
+      "Simultaneous global failure pattern (vs cascading)"
+    ]
+  }
+}
